@@ -33,12 +33,12 @@ app.post('/payu-payment', async (req, res) => {
         accountId: process.env.PAYU_ACCOUNT_ID,
         description: 'Test Payment',
         referenceCode: referenceCode,
-        amount: 500,
+        amount: 50000,
         tax: '0',
         taxReturnBase: '0',
         currency: 'COP',
         signature: '',
-        test: '1',
+        test: '0',
         buyerEmail: email,
     };
 
@@ -92,6 +92,7 @@ app.post('/payment/confirmation', async (req, res) => {
 
 app.use('/webhook', async (req, res) => {
     console.log(req)
+    res.send('Webhook');
 });
 
 app.listen(port, () => {
