@@ -1,69 +1,100 @@
-const express = require('express'); 
-const app = express();             
-const port = 5000; 
+const express = require('express');
+const app = express();
+const port = 5000;
 const cors = require('cors');
 
-const crypto = require("crypto");
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
+const { XMLParser, XMLBuilder, XMLValidator } = require("fast-xml-parser");
 
 const dotenv = require('dotenv');
 dotenv.config();
 
-app.use(cors({ 
-    origin: '*', 
-    methods: ['GET','POST','DELETE','UPDATE','PUT','PATCH']
-}));
+app.use(express.json());
 
-app.get('/', async (req, res) => { 
-    res.sendFile('index.html', {root: __dirname});      
+app.use(
+    cors({
+        origin: '*',
+        methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT', 'PATCH'],
+    })
+);
+
+app.get('/', async (req, res) => {
+    res.sendFile('index.html', { root: __dirname });
 });
 
-app.get('/payu-payment', cors(), async (req, res) => { 
+app.post('/payu-payment', async (req, res) => {
+    const referenceCode = `${Math.round(
+        new Date().getTime() + Math.random() * 100
+    )}`;
+    const email = 'juancamilo6556@gmail.com';
 
-    const payDetails = {
-        txnId:  uuidv4(),
-        plan_name : "Test",
-        first_name: 'Test',
-        email: 'test@example.com',
-        mobile: '9999999999',
-        service_provide: 'test',
-        amount: 19999,
-        call_back_url : `${process.env.BASE_URL}/payment/success`,
-        payu_merchant_key : process.env.PAYU_MERCHANT_KEY,
-        payu_merchant_salt_version_1 : process.env.PAYU_MERCHANT_SALT_VERSION_1,
-        payu_merchant_salt_version_2 : process.env.PAYU_MERCHANT_SALT_VERSION_2,
-        payu_url : process.env.PAYU_URL,
-        payu_fail_url : `${process.env.BASE_URL}/payment/failed`,
-        payu_cancel_url : `${process.env.BASE_URL}/payment/cancel`,
-        payu_url: process.env.PAYU_URL,
-        hashString : '',
-        payu_sha_token : ''
-    }
+    let res_details = {
+        merchantId: process.env.PAYU_MERCHANT_ID,
+        accountId: process.env.PAYU_ACCOUNT_ID,
+        description: 'Test Payment',
+        referenceCode: referenceCode,
+        amount: 500,
+        tax: '0',
+        taxReturnBase: '0',
+        currency: 'COP',
+        signature: '',
+        test: '1',
+        buyerEmail: email,
+    };
 
-    payDetails.hashString = `${process.env.PAYU_MERCHANT_KEY}|${payDetails.txnId}|${parseInt(payDetails.amount)}|${payDetails.plan_name}|${payDetails.first_name}|${payDetails.email}|||||||||||${process.env.PAYU_MERCHANT_SALT_VERSION_1}`,
-    payDetails.payu_sha_token = crypto.createHash('sha512').update(payDetails.hashString).digest('hex');
+    const string = `${process.env.PAYU_API_KEY}~${process.env.PAYU_MERCHANT_ID}~${referenceCode}~${res_details.amount}~${res_details.currency}`;
+    const signature = crypto.createHash('md5').update(string).digest('hex');
+    res_details.signature = signature;
 
-    return res.json({ 
-        success: true, 
-        code: 200, 
-        info: payDetails
+    return res.json({
+        info: res_details,
     });
-
-      
 });
 
-app.post('/payment/failed', cors(), async (req, res) => { 
-    res.redirect('http://localhost:4200');
+app.get('/payment/success', async (req, res) => {
+    res.send('Payment Success')
 });
 
-app.post('/payment/cancel', cors(), async (req, res) => { 
-    res.redirect('http://localhost:4200');
+app.post('/payment/confirmation', async (req, res) => {
+    console.log(req.body.orderId);
+    const templateBody = {
+        "test": true,
+        "language": 'es',
+        "command": 'ORDER_DETAIL',
+        "merchant": {
+            "apiKey": process.env.PAYU_API_KEY,
+            "apiLogin": process.env.PAYU_API_LOGIN,
+        },
+        "details": {
+            orderId: req.body.orderId,
+        },
+    };
+    const response = await fetch(
+        'https://sandbox.api.payulatam.com/reports-api/4.0/service.cgi',
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(templateBody),
+        }
+    );
+
+    if (response.ok) {
+        const data = await response.text();
+        const parser = new XMLParser();
+        const dataJson = parser.parse(data);
+        console.log(dataJson.reportingResponse.result.payload.transactions.transaction.transactionResponse.state);
+        res.send(dataJson);
+    }
 });
 
-app.post('/payment/success', cors(), async (req, res) => { 
-    res.redirect('http://localhost:4200');
+
+app.use('/webhook', async (req, res) => {
+    console.log('Webhook');
+    res.send('Webhook');
 });
 
-app.listen(port, () => {     
-    console.log(`Now listening on port ${port}`); 
+app.listen(port, () => {
+    console.log(`Now listening on port ${port} `);
 });
