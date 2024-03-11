@@ -91,7 +91,9 @@ app.post('/payment/confirmation', async (req, res) => {
 
 
 app.use('/webhook', async (req, res) => {
-    console.log(req)
+    console.log('body', req.body)
+    console.log('headers', req.headers)
+    console.log('query', req.query);
     res.send('Webhook');
 });
 
