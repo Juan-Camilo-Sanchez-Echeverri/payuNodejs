@@ -91,8 +91,7 @@ app.post('/payment/confirmation', async (req, res) => {
 
 
 app.use('/webhook', async (req, res) => {
-    console.log('Webhook');
-    res.send('Webhook');
+    console.log(req)
 });
 
 app.listen(port, () => {
