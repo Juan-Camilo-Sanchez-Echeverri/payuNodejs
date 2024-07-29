@@ -15,7 +15,7 @@
     "crypto-js": "^4.0.0",
     "dotenv": "^16.0.3",
     "express": "^4.19.2",
-    "fast-xml-parser": "^4.3.5",
+    "fast-xml-parser": "^4.4.1",
     "jssha": "^3.2.0",
     "md5": "^2.3.0",
     "nodemon": "^3.1.0",
