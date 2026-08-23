@@ -10,17 +10,17 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "axios": "^1.13.5",
+    "axios": "^1.18.0",
     "cors": "^2.8.5",
     "crypto-js": "^4.0.0",
     "dotenv": "^16.0.3",
-    "express": "^4.21.2",
-    "fast-xml-parser": "^5.5.6",
+    "express": "^4.22.2",
+    "fast-xml-parser": "^5.7.0",
     "jssha": "^3.2.0",
     "md5": "^2.3.0",
     "nodemon": "^3.1.0",
     "request": "^2.88.2",
-    "uuid": "^9.0.0",
+    "uuid": "^14.0.0",
     "xml-js": "^1.6.11"
   }
 }
